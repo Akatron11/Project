@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # --- VERİTABANLARI ---
+  db-users:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  db-products:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+  db-orders:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+
+  # --- MESAJLAŞMA (RabbitMQ) ---
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # Mesaj iletim portu
+      - "15672:15672" # Panel portu (Kullanıcı: guest, Şifre: guest)
+
+  # --- SERVİS KEŞFİ (Consul) ---
+  consul:
+    image: consul:latest
+    ports:
+      - "8500:8500"
