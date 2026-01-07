@@ -1,4 +1,4 @@
-package com.example.orderservice.config;
+package com.example.orderservice;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;

@@ -1,8 +1,5 @@
-package com.example.orderservice.controller;
+package com.example.orderservice;
 
-import com.example.orderservice.model.Order;
-import com.example.orderservice.repository.OrderRepository;
-import com.example.orderservice.config.RabbitMQConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

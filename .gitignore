@@ -1,0 +1,15 @@
+# Java çöpleri
+target/
+*.class
+.mvn/
+
+# Python çöpleri
+__pycache__/
+*.py[cod]
+venv/
+
+# IDE ve Sistem çöpleri
+.idea/
+.vscode/
+.DS_Store
+*.log

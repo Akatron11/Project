@@ -11,7 +11,7 @@ def update_stock(product_id, quantity):
         # PostgreSQL Bağlantısı
         conn = psycopg2.connect(
             dbname=os.getenv("DB_NAME", "products_db"),
-            user=os.getenv("DB_USER", "postgres"),
+            user=os.getenv("DB_USER", "user"),
             password=os.getenv("DB_PASSWORD", "password"),
             host=os.getenv("DB_HOST", "localhost")
         )
@@ -48,3 +48,6 @@ def start_consumer():
 
 if __name__ == "__main__":
     start_consumer()
+
+    #bunu terminale yolla
+    """Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/orders" -ContentType "application/json" -Body '{"productId": 10, "quantity": 5, "customerName": "Kuzen Zafer"}'"""
