@@ -33,6 +33,46 @@ services:
 
   # --- SERVİS KEŞFİ (Consul) ---
   #consul:
-    #image: consul:latest
-    #ports:
-    #  - "8500:8500"
+  #  image: consul:latest
+  #  ports:
+  #    - "8500:8500"
+
+  # --- API GATEWAY (Node.js) ---
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "9000:9000"
+    depends_on:
+      - rabbitmq
+    networks:
+      - micro-network
+
+  # --- ORDER SERVICE (Java) ---
+  order-service:
+    build: ./order-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-orders:3306/orders_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - db-orders
+      - rabbitmq
+    networks:
+      - micro-network
+
+  # --- PRODUCT SERVICE (Python) ---
+  product-service:
+    build: ./product-service
+    environment:
+      - DB_HOST=db-products
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - db-products
+      - rabbitmq
+    networks:
+      - micro-network
+
+networks:
+  micro-network:
+    driver: bridge
