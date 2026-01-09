@@ -1,6 +1,6 @@
 flask
 flask-sqlalchemy
 psycopg2-binary
-elasticsearch
 python-dotenv
+elasticsearch==8.11.1
 pika

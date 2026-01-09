@@ -1,53 +1,33 @@
-import pika
 import json
-import psycopg2
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+import pika
+from models import db, Inventory
+from app import app
 
 def update_stock(product_id, quantity):
-    try:
-        # PostgreSQL Bağlantısı
-        conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME", "products_db"),
-            user=os.getenv("DB_USER", "user"),
-            password=os.getenv("DB_PASSWORD", "password"),
-            host=os.getenv("DB_HOST", "localhost")
-        )
-        cur = conn.cursor()
-        
-        # Stoğu düşür
-        cur.execute(
-            "UPDATE products SET stock = stock - %s WHERE id = %s AND stock >= %s",
-            (quantity, product_id, quantity)
-        )
-        
-        conn.commit()
-        print(f" [x] Stok güncellendi: Ürün {product_id}, Miktar -{quantity}")
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f" [!] Veritabanı hatası: {e}")
+    with app.app_context():
+        inventory = Inventory.query.filter_by(product_id=product_id).first()
+        if inventory and inventory.quantity >= quantity:
+            inventory.quantity -= quantity
+            db.session.commit()
+            print(f"Stok güncellendi: {product_id} -{quantity}")
 
 def callback(ch, method, properties, body):
-    print(f" [x] Mesaj alındı: {body}")
     data = json.loads(body)
     update_stock(data['productId'], data['quantity'])
 
-# RabbitMQ Bağlantısı
 def start_consumer():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='rabbitmq')
+    )
     channel = connection.channel()
     channel.queue_declare(queue='order_queue', durable=True)
-
-    channel.basic_consume(queue='order_queue', on_message_callback=callback, auto_ack=True)
-
-    print(' [*] Siparişler bekleniyor. Çıkmak için CTRL+C')
+    channel.basic_consume(
+        queue='order_queue',
+        on_message_callback=callback,
+        auto_ack=True
+    )
+    print("Siparişler bekleniyor...")
     channel.start_consuming()
 
 if __name__ == "__main__":
     start_consumer()
-
-    #bunu terminale yolla
-    """Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/orders" -ContentType "application/json" -Body '{"productId": 10, "quantity": 5, "customerName": "Kuzen Zafer"}'"""

@@ -1,71 +1,161 @@
-This project simulates the Event-Driven Microservice structure used in modern software architectures. Java and Python services communicate asynchronously via the RabbitMQ message queue.
-----------------------------------------------------------------------------------------------------------------------------------------------
+# ShopHub - E-Commerce Microservices Platform
 
-Architectural Components
+Modern bir mikroservis mimarisi ile oluşturulmuş tam özellikli e-ticaret platformu.
 
-Order Service (Java/Spring Boot): Receives order requests from the user, saves order data to a MySQL database, and sends an "Order Created" message to RabbitMQ.
+## 🏗 Mimari
 
-Product Service (Python): Continuously listens to RabbitMQ. When a new order message arrives, it updates the stock quantity in the PostgreSQL database.
+```
+┌──────────────────┐
+│  React Frontend  │ :5173
+│   (Vite + TS)    │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│   API Gateway    │ :9000
+│   (Express.js)   │
+└────────┬─────────┘
+         │
+    ┌────┴────┬────────────┐
+    ▼         ▼            ▼
+┌────────┐ ┌────────┐ ┌────────┐
+│ User   │ │Product │ │ Order  │
+│Service │ │Service │ │Service │
+│:3000   │ │:5000   │ │:8080   │
+│Node.js │ │Flask   │ │Spring  │
+└────┬───┘ └────┬───┘ └────┬───┘
+     │          │          │
+     ▼          ▼          ▼
+┌────────┐ ┌────────┐ ┌────────┐
+│MongoDB │ │Postgres│ │ MySQL  │
+│:27017  │ │:5432   │ │:3306   │
+└────────┘ └────────┘ └────────┘
+                │          │
+                ▼          ▼
+          ┌──────────┐ ┌────────────┐
+          │Elastic   │ │ RabbitMQ   │
+          │Search    │ │:5672,:15672│
+          │:9200     │ └────────────┘
+          └──────────┘
+```
 
-Message Broker (RabbitMQ): Provides independent communication between the two services.
+## 🛠 Teknolojiler
 
-Containerization: The entire infrastructure (Databases and RabbitMQ) is managed with Docker Compose.
-----------------------------------------------------------------------------------------------------------------------------------------------
+| Servis | Teknoloji | Port |
+|--------|-----------|------|
+| Frontend | React + Vite + TypeScript | 5173 |
+| API Gateway | Node.js + Express | 9000 |
+| User Service | Node.js + Express + MongoDB | 3000 |
+| Product Service | Python + Flask + PostgreSQL | 5000 |
+| Order Service | Java + Spring Boot + MySQL | 8080 |
+| Message Broker | RabbitMQ | 5672, 15672 |
+| Search Engine | Elasticsearch | 9200 |
 
-Technologies Used
-Backend: Java 17, Spring Boot 3.5.x, Python 3.x
+## 🚀 Başlangıç
 
-Database: MySQL 8.0, PostgreSQL 15
+### 1. Docker ile Tüm Servisleri Başlat
+```bash
+docker-compose up -d --build
+```
 
-Messaging: RabbitMQ (AMQP)
+### 2. Veritabanlarını Seed Et
+```bash
+# Ürünleri ekle
+docker-compose exec -T product-service python seed_products.py
 
-Libraries: Spring Data JPA, Pika, Psycopg2, Lombok
-----------------------------------------------------------------------------------------------------------------------------------------------
+# Ürün görsellerini ekle
+docker-compose exec -T product-service python update_images.py
+```
 
-Starting the System
+### 3. Frontend'i Başlat
+```bash
+cd e-commerce-frontend
+npm install
+npm run dev
+```
 
-Start the Infrastructure:
-docker-compose up -d
+### 4. Tarayıcıda Aç
+- Frontend: http://localhost:5173
+- RabbitMQ Dashboard: http://localhost:15672 (guest/guest)
 
+## 📁 Proje Yapısı
 
-Database Setup and Table Creation
-For the system to work, the products table must be manually created on the PostgreSQL side. Follow these steps:
+```
+proje/
+├── api-gateway/         # Express.js API Gateway
+├── user-service/        # Node.js kullanıcı servisi (MongoDB)
+├── product-service/     # Flask ürün servisi (PostgreSQL)
+├── order-service/       # Spring Boot sipariş servisi (MySQL)
+├── e-commerce-frontend/ # React frontend
+├── e-commerce-backend/  # (Kullanılmayan FastAPI alternatifi)
+├── docker-compose.yml   # Tüm servislerin orchestration'ı
+└── README.md
+```
 
-Connect to the Docker PostgreSQL Container:
+## 🔗 API Endpoints
 
-docker exec -it db-products psql -U user -d products_db
+### User Service (`/api/users`)
+| Method | Endpoint | Açıklama |
+|--------|----------|----------|
+| POST | /register | Yeni kullanıcı kaydı |
+| POST | /login | Kullanıcı girişi (JWT) |
 
-Run the following SQL Commands:
+### Product Service (`/api/products`)
+| Method | Endpoint | Açıklama |
+|--------|----------|----------|
+| GET | / | Tüm ürünleri listele |
+| GET | /?q=laptop | Ürün ara |
+| POST | / | Yeni ürün ekle |
 
--- Create the products table
-CREATE TABLE products (
-id SERIAL PRIMARY KEY,
-name VARCHAR(100),
-stock INT DEFAULT 100
-);
+### Order Service (`/api/orders`)
+| Method | Endpoint | Açıklama |
+|--------|----------|----------|
+| GET | / | Tüm siparişler |
+| GET | /{id} | Sipariş detayı |
+| GET | /user/{userId} | Kullanıcı siparişleri |
+| POST | / | Yeni sipariş |
+| PUT | /{id} | Sipariş güncelle |
+| DELETE | /{id} | Sipariş iptal |
 
--- Add a sample product for testing (id: 10)
-INSERT INTO products (id, name, stock) VALUES (10, 'Test Keyboard', 100);
+## 🧪 Test
 
-To Check:
-SELECT * FROM products;
-(You can type \q to exit.)
-----------------------------------------------------------------------------------------------------------------------------------------------
+```bash
+# Ürünleri test et
+curl http://localhost:9000/api/products
 
+# Kullanıcı kaydı
+curl -X POST http://localhost:9000/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test@test.com", "password": "123456"}'
 
+# Sipariş oluştur
+curl -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "user1", "productId": "1", "quantity": 2, "totalPrice": 100}'
+```
 
-Order Service (Java):
-cd order-service
-mvn spring-boot:run
+## 📊 Özellikler
 
+- ✅ Kullanıcı kayıt ve giriş (JWT)
+- ✅ 20 ürün ile ürün listeleme
+- ✅ Gerçek ürün görselleri
+- ✅ Arama ve filtreleme
+- ✅ Sipariş oluşturma (RabbitMQ ile stok güncelleme)
+- ✅ Responsive tasarım
+- ✅ Sepet işlemleri
 
-Product Service (Python):
-cd product-service
-python consumer.py
+## 🐳 Docker Servisleri
 
-Testing (PowerShell / Terminal)
-To test the system, an order can be sent with the following command:
+```bash
+# Durumu kontrol et
+docker-compose ps
 
-PowerShell
-Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/orders" -ContentType "application/json" -Body '{"productId": 10, "quantity": 5, "customerName": "Cousin Zafer"}'
-----------------------------------------------------------------------------------------------------------------------------------------------
+# Logları gör
+docker-compose logs -f [servis-adı]
+
+# Yeniden başlat
+docker-compose restart [servis-adı]
+
+# Durdur
+docker-compose down
+```

@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: product_postgres
+    environment:
+      POSTGRES_DB: products_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+
+  product-service:
+    build: .
+    container_name: product_service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - elasticsearch
+    ports:
+      - "8000:8000"
+    command: python app.py
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: product_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  postgres_data:
+  es_data:

@@ -19,7 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing token and user data
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
@@ -34,22 +34,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Mock API call - replace with actual API integration
+      const response = await fetch('http://localhost:9000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+
+      const data = await response.json();
+
       const mockUser: User = {
-        id: '1',
+        id: data.userId || '1',
         email,
-        firstName: 'Selin',
-        lastName: 'Türkdoğan',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
+        firstName: email.split('@')[0],
+        lastName: '',
       };
-      
-      const mockToken = 'mock-jwt-token';
-      
-      localStorage.setItem('token', mockToken);
+
+      localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
     } catch (error) {
-      throw new Error('Login failed');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -58,21 +67,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: RegisterData) => {
     setLoading(true);
     try {
-      // Mock API call - replace with actual API integration
-      const mockUser: User = {
-        id: '1',
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-      };
-      
-      const mockToken = 'mock-jwt-token';
-      
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      const response = await fetch('http://localhost:9000/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: userData.email,
+          password: userData.password
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Registration failed');
+      }
+
+      // Auto-login after registration
+      await login(userData.email, userData.password);
     } catch (error) {
-      throw new Error('Registration failed');
+      throw error;
     } finally {
       setLoading(false);
     }

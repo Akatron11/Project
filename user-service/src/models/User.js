@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
+  // Controller username gönderdiği için alanı düzelttik
+  username: { type: String, required: true, unique: true }, 
+  password: { type: String, required: true },
   language: { type: String, default: "tr" }
 });
 

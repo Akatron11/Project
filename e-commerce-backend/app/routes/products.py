@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
 from .. import crud, schemas
@@ -15,12 +15,6 @@ def get_db():
 @router.post("/", response_model=schemas.ProductResponse)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return crud.create_product(db, product)
-
-@router.get("/", response_model=list[schemas.ProductResponse])
-def list_products(db: Session = Depends(get_db)):
-    return crud.get_products(db)
-
-from fastapi import HTTPException
 
 @router.get("/", response_model=list[schemas.ProductResponse])
 def list_products(

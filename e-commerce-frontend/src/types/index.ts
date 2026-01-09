@@ -13,6 +13,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  image_url?: string;  // Backend'den gelen görsel URL'i
   images?: string[];
   category: string;
   brand: string;
@@ -20,6 +21,7 @@ export interface Product {
   reviewCount: number;
   inStock: boolean;
   quantity?: number;
+  stock?: number;  // Backend'den gelen stok
 }
 
 export interface CartItem {

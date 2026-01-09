@@ -56,9 +56,9 @@ export default function ProductsPage() {
     }
 
     // On sale → backend’de alan yok, o yüzden etkisiz
-    if (showOnSale) {
-      filtered = filtered;
-    }
+    // if (showOnSale) {
+    //   filtered = filtered;
+    // }
 
     return filtered;
   }, [products, priceRange, showOnSale]);
@@ -167,10 +167,10 @@ export default function ProductsPage() {
               <Card key={product.id}>
                 <CardContent className="p-4 space-y-3">
                   <img
-  src="https://picsum.photos/400/250"
-  alt={product.name}
-  className="w-full h-48 object-cover rounded-md bg-gray-100"
-/>
+                    src={product.image_url || product.image || "https://picsum.photos/400/250"}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded-md bg-gray-100"
+                  />
 
                   <h3 className="font-medium">
                     <Link to={`/products/${product.id}`}>
